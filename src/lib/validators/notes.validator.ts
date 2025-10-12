@@ -51,3 +51,14 @@ export const createNoteSchema = z
  * TypeScript type inferred from the Zod schema
  */
 export type CreateNoteInput = z.infer<typeof createNoteSchema>;
+
+/**
+ * Schema for updating an existing note
+ * Same validation rules as create
+ */
+export const updateNoteSchema = createNoteSchema;
+
+/**
+ * Type for form view model (used by react-hook-form)
+ */
+export type NoteFormViewModel = z.infer<typeof createNoteSchema>;

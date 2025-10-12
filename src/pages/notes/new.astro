@@ -1,0 +1,25 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import { NoteForm } from "../../components/notes/NoteForm";
+
+export const prerender = false;
+---
+
+<Layout title="Create New Note - VibeTravel">
+  <main class="container mx-auto px-4 py-8">
+    <div class="mb-8">
+      <h1 class="text-3xl font-bold mb-2">Create New Travel Note</h1>
+      <p class="text-muted-foreground">
+        Add details about your upcoming trip to generate personalized travel plans.
+      </p>
+    </div>
+
+    <NoteForm
+      client:load
+      onSuccess={(note) => {
+        // Redirect to home page after successful creation
+        window.location.href = "/";
+      }}
+    />
+  </main>
+</Layout>
