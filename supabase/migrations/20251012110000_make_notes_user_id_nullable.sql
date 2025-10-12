@@ -1,23 +1,17 @@
 -- ============================================================================
--- Migration: Make user_id nullable in notes table
--- Description: Allow creating notes without authentication for MVP phase
+-- Migration: Configure notes table for development without authentication
+-- Description: Allow creating notes with a default user_id for development
 -- Tables affected: notes
 -- Breaking change: No - existing data remains valid
 -- ============================================================================
 
--- Remove NOT NULL constraint from user_id
-alter table notes alter column user_id drop not null;
-
--- Drop the foreign key constraint temporarily
+-- Drop the foreign key constraint for development
+-- This allows using a default UUID without requiring actual users in auth.users
 alter table notes drop constraint if exists notes_user_id_fkey;
 
--- Recreate the foreign key constraint without NOT NULL requirement
--- This allows NULL values but still validates when user_id is provided
-alter table notes
-  add constraint notes_user_id_fkey
-  foreign key (user_id)
-  references auth.users(id)
-  on delete cascade;
+-- Keep user_id as NOT NULL but without foreign key validation
+-- During development, we'll use a constant DEFAULT_USER_ID = '00000000-0000-0000-0000-000000000000'
+-- In production, we'll restore the foreign key constraint
 
 -- Update comment
-comment on column notes.user_id is 'Owner of the note (foreign key to auth.users, nullable for MVP phase)';
+comment on column notes.user_id is 'Owner of the note (UUID, foreign key constraint removed for development phase)';

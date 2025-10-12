@@ -98,7 +98,7 @@ export type Database = {
           start_date: string
           total_budget: number | null
           updated_at: string
-          user_id: string | null
+          user_id: string
         }
         Insert: {
           additional_notes?: string | null
@@ -109,7 +109,7 @@ export type Database = {
           start_date: string
           total_budget?: number | null
           updated_at?: string
-          user_id?: string | null
+          user_id: string
         }
         Update: {
           additional_notes?: string | null
@@ -120,7 +120,7 @@ export type Database = {
           start_date?: string
           total_budget?: number | null
           updated_at?: string
-          user_id?: string | null
+          user_id?: string
         }
         Relationships: []
       }

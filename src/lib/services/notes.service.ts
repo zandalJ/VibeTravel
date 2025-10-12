@@ -2,6 +2,12 @@ import type { SupabaseClient } from "../../db/supabase.client";
 import type { CreateNoteCommand, NoteDTO } from "../../types";
 
 /**
+ * Default user ID for development purposes
+ * TODO: Replace with actual authentication in production
+ */
+const DEFAULT_USER_ID = "00000000-0000-0000-0000-000000000000";
+
+/**
  * Service for managing travel notes
  * Handles CRUD operations for notes table
  */
@@ -9,7 +15,7 @@ export class NotesService {
   constructor(private supabase: SupabaseClient) {}
 
   /**
-   * Creates a new travel note without user authentication (MVP phase)
+   * Creates a new travel note with a default user ID (for development)
    *
    * @param command - The note data to create
    * @returns Promise resolving to the created note with all fields
@@ -19,7 +25,7 @@ export class NotesService {
     const { data, error } = await this.supabase
       .from("notes")
       .insert({
-        user_id: null,
+        user_id: DEFAULT_USER_ID,
         destination: command.destination,
         start_date: command.start_date,
         end_date: command.end_date,
