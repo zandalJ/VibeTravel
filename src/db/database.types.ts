@@ -22,30 +22,39 @@ export interface Database {
     Tables: {
       generation_logs: {
         Row: {
+          completion_tokens: number | null;
           created_at: string;
+          error_code: string | null;
           error_message: string | null;
           id: string;
           note_id: string | null;
           plan_id: string | null;
-          success: boolean;
+          prompt_tokens: number | null;
+          status: string;
           user_id: string;
         };
         Insert: {
+          completion_tokens?: number | null;
           created_at?: string;
+          error_code?: string | null;
           error_message?: string | null;
           id?: string;
           note_id?: string | null;
           plan_id?: string | null;
-          success: boolean;
+          prompt_tokens?: number | null;
+          status: string;
           user_id: string;
         };
         Update: {
+          completion_tokens?: number | null;
           created_at?: string;
+          error_code?: string | null;
           error_message?: string | null;
           id?: string;
           note_id?: string | null;
           plan_id?: string | null;
-          success?: boolean;
+          prompt_tokens?: number | null;
+          status?: string;
           user_id?: string;
         };
         Relationships: [
@@ -67,26 +76,35 @@ export interface Database {
       };
       notes: {
         Row: {
-          content: string | null;
+          additional_notes: string | null;
           created_at: string;
+          destination: string;
+          end_date: string;
           id: string;
-          title: string;
+          start_date: string;
+          total_budget: number | null;
           updated_at: string;
           user_id: string;
         };
         Insert: {
-          content?: string | null;
+          additional_notes?: string | null;
           created_at?: string;
+          destination: string;
+          end_date: string;
           id?: string;
-          title: string;
+          start_date: string;
+          total_budget?: number | null;
           updated_at?: string;
           user_id: string;
         };
         Update: {
-          content?: string | null;
+          additional_notes?: string | null;
           created_at?: string;
+          destination?: string;
+          end_date?: string;
           id?: string;
-          title?: string;
+          start_date?: string;
+          total_budget?: number | null;
           updated_at?: string;
           user_id?: string;
         };
@@ -94,37 +112,40 @@ export interface Database {
       };
       plans: {
         Row: {
+          content: string;
           created_at: string;
-          error_message: string | null;
+          feedback: number | null;
           id: string;
-          itinerary: Json | null;
           note_id: string;
-          status: Database["public"]["Enums"]["generation_status_enum"];
+          prompt_text: string;
+          prompt_version: string;
           updated_at: string;
         };
         Insert: {
+          content: string;
           created_at?: string;
-          error_message?: string | null;
+          feedback?: number | null;
           id?: string;
-          itinerary?: Json | null;
           note_id: string;
-          status?: Database["public"]["Enums"]["generation_status_enum"];
+          prompt_text: string;
+          prompt_version?: string;
           updated_at?: string;
         };
         Update: {
+          content?: string;
           created_at?: string;
-          error_message?: string | null;
+          feedback?: number | null;
           id?: string;
-          itinerary?: Json | null;
           note_id?: string;
-          status?: Database["public"]["Enums"]["generation_status_enum"];
+          prompt_text?: string;
+          prompt_version?: string;
           updated_at?: string;
         };
         Relationships: [
           {
             foreignKeyName: "plans_note_id_fkey";
             columns: ["note_id"];
-            isOneToOne: true;
+            isOneToOne: false;
             referencedRelation: "notes";
             referencedColumns: ["id"];
           },
