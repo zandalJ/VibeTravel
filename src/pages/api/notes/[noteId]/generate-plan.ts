@@ -25,13 +25,18 @@ export const POST: APIRoute = async (context) => {
   try {
     // Step 1: Extract and validate noteId from URL params
     const { noteId } = context.params;
+    console.log("[generate-plan] Received noteId:", noteId);
     const validatedNoteId = validateNoteId(noteId);
+    console.log("[generate-plan] Validated noteId:", validatedNoteId);
 
     // Step 2: Initialize plan generation service
     const planGenerationService = new PlanGenerationService(context.locals.supabase);
+    console.log("[generate-plan] Service initialized");
 
     // Step 3: Generate plan
+    console.log("[generate-plan] Starting plan generation...");
     const result = await planGenerationService.generatePlan(validatedNoteId);
+    console.log("[generate-plan] Plan generated successfully:", result.id);
 
     // Step 4: Return success response
     return new Response(JSON.stringify(result), {
@@ -43,6 +48,10 @@ export const POST: APIRoute = async (context) => {
     });
   } catch (error) {
     // Step 5: Handle all errors with error mapper
+    console.error("[generate-plan] Error occurred:", error);
+    if (error instanceof Error) {
+      console.error("[generate-plan] Error stack:", error.stack);
+    }
     return createErrorResponse(error);
   }
 };

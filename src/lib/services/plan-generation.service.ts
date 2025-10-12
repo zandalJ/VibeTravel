@@ -62,12 +62,11 @@ export class PlanGenerationService {
     // Step 3: Check generation limits
     await this.checkGenerationLimit(profile);
 
-    // Step 4: Create generation log (pending)
-    const logId = await this.createGenerationLog(note.user_id, noteId, "pending");
+    // Step 4: Create generation log (in_progress)
+    const logId = await this.createGenerationLog(note.user_id, noteId, "in_progress");
 
     try {
-      // Step 5: Update log to processing
-      await this.updateGenerationLogStatus(logId, "processing");
+      // Step 5: Log is already in_progress, continue with generation
 
       // Step 6: Build prompt from note and profile
       const prompt = this.buildPromptFromData(note, profile);
@@ -79,9 +78,9 @@ export class PlanGenerationService {
       // Step 8: Create plan record
       const plan = await this.createPlan(noteId, aiResponse.content, prompt);
 
-      // Step 9: Update generation log (completed)
+      // Step 9: Update generation log (success)
       await this.updateGenerationLog(logId, {
-        status: "completed",
+        status: "success",
         plan_id: plan.id,
         prompt_tokens: aiResponse.promptTokens,
         completion_tokens: aiResponse.completionTokens,
@@ -236,17 +235,12 @@ export class PlanGenerationService {
       .single();
 
     if (error || !data) {
-      throw new Error("Failed to create generation log");
+      console.error("[createGenerationLog] Supabase error:", error);
+      console.error("[createGenerationLog] userId:", userId, "noteId:", noteId, "status:", status);
+      throw new Error(`Failed to create generation log: ${error?.message || "Unknown error"}`);
     }
 
     return data.id;
-  }
-
-  /**
-   * Update generation log status
-   */
-  private async updateGenerationLogStatus(logId: string, status: string): Promise<void> {
-    await this.supabase.from("generation_logs").update({ status }).eq("id", logId);
   }
 
   /**
