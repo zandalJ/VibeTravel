@@ -62,3 +62,26 @@ export const updateNoteSchema = createNoteSchema;
  * Type for form view model (used by react-hook-form)
  */
 export type NoteFormViewModel = z.infer<typeof createNoteSchema>;
+
+/**
+ * Schema for validating note ID (UUID format)
+ */
+export const noteIdSchema = z.string().uuid("Invalid UUID format");
+
+/**
+ * Validates and returns a note ID
+ * @throws z.ZodError if invalid
+ */
+export function validateNoteId(noteId: string | undefined): string {
+  if (!noteId) {
+    throw new z.ZodError([
+      {
+        code: "custom",
+        path: ["id"],
+        message: "Note ID is required",
+      },
+    ]);
+  }
+
+  return noteIdSchema.parse(noteId);
+}
