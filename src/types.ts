@@ -238,6 +238,34 @@ export interface SortParams {
 }
 
 // ============================================================================
+// VIEW MODELS
+// ============================================================================
+
+/**
+ * Aggregates all data and UI states needed for the NoteDetailsView.
+ */
+export interface NoteDetailsViewModel {
+  /** Data of the currently displayed note. */
+  note: NoteDTO | null;
+  /** List of historical plans for this note. */
+  plans: PlanListItemDTO[];
+  /** Information about whether the user profile is complete. */
+  isProfileComplete: boolean;
+  /** Number of remaining plan generations this month. */
+  remainingGenerations: number | null;
+  /** Loading state for main data (note, history). */
+  isLoading: boolean;
+  /** Loading state during new plan generation. */
+  isGeneratingPlan: boolean;
+  /** Loading state during note deletion. */
+  isDeletingNote: boolean;
+  /** General error message for the view. */
+  error: string | null;
+  /** Determines if the delete confirmation modal is open. */
+  isDeleteDialogOpen: boolean;
+}
+
+// ============================================================================
 // HELPER TYPES
 // ============================================================================
 
