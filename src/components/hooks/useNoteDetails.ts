@@ -34,20 +34,31 @@ export function useNoteDetails({
     try {
       setViewModel((prev) => ({ ...prev, isLoading: true, error: null }));
 
-      const response = await fetch(`/api/notes/${noteId}`);
-
-      if (!response.ok) {
+      // Fetch note details
+      const noteResponse = await fetch(`/api/notes/${noteId}`);
+      if (!noteResponse.ok) {
         throw new Error("Nie udało się pobrać danych notatki");
       }
+      const noteData = await noteResponse.json();
 
-      const data = await response.json();
+      // Fetch plans history
+      const plansResponse = await fetch(`/api/notes/${noteId}/plans`);
+      if (!plansResponse.ok) {
+        throw new Error("Nie udało się pobrać historii planów");
+      }
+      const plansData = await plansResponse.json();
+
+      // TODO: Fetch profile status and remaining generations
+      // For now, set placeholder values
+      const isProfileComplete = true;
+      const remainingGenerations = 5;
 
       setViewModel((prev) => ({
         ...prev,
-        note: data.note,
-        plans: data.plans || [],
-        isProfileComplete: data.isProfileComplete,
-        remainingGenerations: data.remainingGenerations,
+        note: noteData,
+        plans: plansData.plans || [],
+        isProfileComplete,
+        remainingGenerations,
         isLoading: false,
       }));
     } catch (error) {
@@ -85,12 +96,11 @@ export function useNoteDetails({
     try {
       setViewModel((prev) => ({ ...prev, isGeneratingPlan: true }));
 
-      const response = await fetch("/api/plans", {
+      const response = await fetch(`/api/notes/${noteId}/generate-plan`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ note_id: noteId }),
       });
 
       if (!response.ok) {
@@ -103,7 +113,7 @@ export function useNoteDetails({
       toast.success("Plan został wygenerowany!");
 
       // Redirect to the new plan
-      window.location.href = `/plans/${data.planId}`;
+      window.location.href = `/plans/${data.id}`;
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "Wystąpił nieoczekiwany błąd";

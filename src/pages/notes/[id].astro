@@ -1,0 +1,19 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import { NoteDetailsView } from "../../components/notes/NoteDetailsView";
+
+// Get the note ID from the URL parameters
+const { id } = Astro.params;
+
+// Validate that we have an ID
+if (!id) {
+  return Astro.redirect("/notes");
+}
+
+// Set page metadata
+const pageTitle = "Szczegóły notatki - VibeTravel";
+---
+
+<Layout title={pageTitle}>
+  <NoteDetailsView noteId={id} client:load />
+</Layout>
