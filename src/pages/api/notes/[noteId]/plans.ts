@@ -87,3 +87,89 @@ export const GET: APIRoute = async (context) => {
     return createErrorResponse(error);
   }
 };
+
+/**
+ * POST /api/notes/:noteId/plans
+ * Creates a new plan from accepted preview (saves to database)
+ *
+ * URL Parameters:
+ * - noteId: UUID of the note to create plan for
+ *
+ * Request Body:
+ * - content: string - The generated plan content
+ *
+ * Response: 201 Created with PlanDTO
+ *
+ * Error responses:
+ * - 400 Bad Request: Invalid UUID format or missing content
+ * - 401 Unauthorized: No authentication session (production only)
+ * - 403 Forbidden: User doesn't own the note
+ * - 404 Not Found: Note doesn't exist
+ * - 500 Internal Server Error: Database or unexpected errors
+ *
+ * NOTE: For MVP, falls back to DEFAULT_USER_ID when no auth session exists
+ */
+export const POST: APIRoute = async (context) => {
+  try {
+    // Step 1: Extract and validate noteId from URL params
+    const { noteId } = context.params;
+    console.log("[POST /api/notes/:noteId/plans] Received noteId:", noteId);
+
+    const validatedNoteId = validateNoteId(noteId);
+    console.log("[POST /api/notes/:noteId/plans] Validated noteId:", validatedNoteId);
+
+    // Step 2: Parse request body
+    const body = await context.request.json();
+    const { content } = body;
+
+    if (!content || typeof content !== "string") {
+      return new Response(JSON.stringify({ error: "Missing or invalid content field" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    console.log("[POST /api/notes/:noteId/plans] Content length:", content.length);
+
+    // Step 3: Authentication check - get current user (or use default for MVP)
+    const {
+      data: { user },
+      error: authError,
+    } = await context.locals.supabase.auth.getUser();
+
+    // For MVP: Use DEFAULT_USER_ID when no auth session exists
+    const userId = user?.id || DEFAULT_USER_ID;
+
+    if (authError) {
+      console.warn("[POST /api/notes/:noteId/plans] Auth error (using DEFAULT_USER_ID):", authError.message);
+    }
+
+    console.log("[POST /api/notes/:noteId/plans] Using user ID:", userId);
+
+    // Step 4: Initialize plans service
+    const plansService = new PlansService(context.locals.supabase);
+
+    // Step 5: Create plan with authorization check
+    console.log("[POST /api/notes/:noteId/plans] Creating plan...");
+    const plan = await plansService.createPlan(validatedNoteId, userId, content);
+    console.log("[POST /api/notes/:noteId/plans] Plan created successfully:", plan.id);
+
+    // Step 6: Return success response
+    return new Response(JSON.stringify(plan), {
+      status: 201,
+      headers: {
+        "Content-Type": "application/json",
+        Location: `/api/plans/${plan.id}`,
+      },
+    });
+  } catch (error) {
+    // Step 7: Handle all errors with error mapper
+    console.error("[POST /api/notes/:noteId/plans] Error occurred:", error);
+
+    if (error instanceof Error) {
+      console.error("[POST /api/notes/:noteId/plans] Error stack:", error.stack);
+    }
+
+    return createErrorResponse(error);
+  }
+};

@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "../../db/supabase.client";
-import type { CreateNoteCommand, NoteDTO } from "../../types";
+import type { CreateNoteCommand, UpdateNoteCommand, NoteDTO } from "../../types";
 import { NotFoundError, ForbiddenError } from "../errors/plan-generation.errors";
 
 /**
@@ -61,11 +61,7 @@ export class NotesService {
    */
   async getNoteById(noteId: string, userId: string): Promise<NoteDTO> {
     // Step 1: Query note from database
-    const { data, error } = await this.supabase
-      .from("notes")
-      .select("*")
-      .eq("id", noteId)
-      .single();
+    const { data, error } = await this.supabase.from("notes").select("*").eq("id", noteId).single();
 
     // Step 2: Handle database errors
     if (error) {
@@ -91,6 +87,61 @@ export class NotesService {
     }
 
     // Step 5: Transform to NoteDTO (exclude user_id)
+    const noteDTO: NoteDTO = {
+      id: data.id,
+      destination: data.destination,
+      start_date: data.start_date,
+      end_date: data.end_date,
+      total_budget: data.total_budget,
+      additional_notes: data.additional_notes,
+      created_at: data.created_at,
+      updated_at: data.updated_at,
+    };
+
+    return noteDTO;
+  }
+
+  /**
+   * Updates an existing travel note with authorization check
+   *
+   * @param noteId - UUID of the note to update
+   * @param userId - UUID of the authenticated user
+   * @param command - The updated note data
+   * @returns Promise resolving to the updated note
+   * @throws NotFoundError if note doesn't exist
+   * @throws ForbiddenError if user doesn't own the note
+   * @throws Error for database errors
+   */
+  async updateNote(noteId: string, userId: string, command: UpdateNoteCommand): Promise<NoteDTO> {
+    // Step 1: Verify note exists and user has permission
+    await this.getNoteById(noteId, userId);
+
+    // Step 2: Update the note
+    const { data, error } = await this.supabase
+      .from("notes")
+      .update({
+        destination: command.destination,
+        start_date: command.start_date,
+        end_date: command.end_date,
+        total_budget: command.total_budget ?? null,
+        additional_notes: command.additional_notes ?? null,
+      })
+      .eq("id", noteId)
+      .select()
+      .single();
+
+    // Step 3: Handle database errors
+    if (error) {
+      // eslint-disable-next-line no-console
+      console.error("[NotesService.updateNote] Database error:", error);
+      throw new Error(`Failed to update note: ${error.message}`);
+    }
+
+    if (!data) {
+      throw new Error("Failed to update note: No data returned");
+    }
+
+    // Step 4: Transform to NoteDTO (exclude user_id)
     const noteDTO: NoteDTO = {
       id: data.id,
       destination: data.destination,

@@ -8,6 +8,8 @@ interface UseNoteDetailsParams {
 
 interface UseNoteDetailsReturn extends NoteDetailsViewModel {
   handleGeneratePlan: () => Promise<void>;
+  handleAcceptPlan: () => Promise<void>;
+  handleRejectPlan: () => void;
   handleDeleteNote: () => Promise<void>;
   handleOpenDeleteDialog: () => void;
   handleCloseDeleteDialog: () => void;
@@ -27,6 +29,8 @@ export function useNoteDetails({
     isDeletingNote: false,
     error: null,
     isDeleteDialogOpen: false,
+    generatedPlanPreview: null,
+    isPlanPreviewDialogOpen: false,
   });
 
   // Fetch initial data
@@ -78,7 +82,12 @@ export function useNoteDetails({
     fetchNoteDetails();
   }, [fetchNoteDetails]);
 
-  // Generate new plan
+  // Refresh data
+  const refreshData = useCallback(async () => {
+    await fetchNoteDetails();
+  }, [fetchNoteDetails]);
+
+  // Generate new plan (without saving to database)
   const handleGeneratePlan = useCallback(async () => {
     if (!viewModel.isProfileComplete) {
       toast.error("Uzupełnij profil preferencji przed generowaniem planu");
@@ -109,18 +118,76 @@ export function useNoteDetails({
       }
 
       const data = await response.json();
-
-      toast.success("Plan został wygenerowany!");
-
-      // Redirect to the new plan
-      window.location.href = `/plans/${data.id}`;
+      
+      // Show preview dialog with generated plan
+      setViewModel((prev) => ({
+        ...prev,
+        isGeneratingPlan: false,
+        generatedPlanPreview: data.plan,
+        isPlanPreviewDialogOpen: true,
+      }));
     } catch (error) {
+      console.error("Failed to generate plan:", error);
       const errorMessage =
-        error instanceof Error ? error.message : "Wystąpił nieoczekiwany błąd";
+        error instanceof Error ? error.message : "Wystąpił błąd podczas generowania planu";
+      setViewModel((prev) => ({
+        ...prev,
+        isGeneratingPlan: false,
+        error: errorMessage,
+      }));
       toast.error(errorMessage);
-      setViewModel((prev) => ({ ...prev, isGeneratingPlan: false }));
     }
   }, [noteId, viewModel.isProfileComplete, viewModel.remainingGenerations]);
+
+  // Accept generated plan - save to database
+  const handleAcceptPlan = useCallback(async () => {
+    if (!viewModel.generatedPlanPreview) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/notes/${noteId}/plans`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          content: viewModel.generatedPlanPreview.content,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Nie udało się zapisać planu");
+      }
+
+      toast.success("Plan został zaakceptowany i zapisany");
+      
+      // Close dialog and refresh data
+      setViewModel((prev) => ({
+        ...prev,
+        generatedPlanPreview: null,
+        isPlanPreviewDialogOpen: false,
+      }));
+      
+      await refreshData();
+    } catch (error) {
+      console.error("Failed to save plan:", error);
+      const errorMessage =
+        error instanceof Error ? error.message : "Wystąpił błąd podczas zapisywania planu";
+      toast.error(errorMessage);
+    }
+  }, [noteId, viewModel.generatedPlanPreview, refreshData]);
+
+  // Reject generated plan - just close dialog
+  const handleRejectPlan = useCallback(() => {
+    setViewModel((prev) => ({
+      ...prev,
+      generatedPlanPreview: null,
+      isPlanPreviewDialogOpen: false,
+    }));
+    toast.info("Plan został odrzucony");
+  }, []);
 
   // Delete note
   const handleDeleteNote = useCallback(async () => {
@@ -160,14 +227,11 @@ export function useNoteDetails({
     setViewModel((prev) => ({ ...prev, isDeleteDialogOpen: false }));
   }, []);
 
-  // Refresh data
-  const refreshData = useCallback(async () => {
-    await fetchNoteDetails();
-  }, [fetchNoteDetails]);
-
   return {
     ...viewModel,
     handleGeneratePlan,
+    handleAcceptPlan,
+    handleRejectPlan,
     handleDeleteNote,
     handleOpenDeleteDialog,
     handleCloseDeleteDialog,

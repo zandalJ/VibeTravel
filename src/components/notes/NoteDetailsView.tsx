@@ -3,6 +3,7 @@ import { NoteDetailsCard } from "./NoteDetailsCard";
 import { PlanGenerationControl } from "./PlanGenerationControl";
 import { PlanHistoryList } from "./PlanHistoryList";
 import { ConfirmationDialog } from "./ConfirmationDialog";
+import { PlanPreviewDialog } from "./PlanPreviewDialog";
 import { Toaster } from "@/components/ui/sonner";
 
 interface NoteDetailsViewProps {
@@ -20,7 +21,11 @@ export function NoteDetailsView({ noteId }: NoteDetailsViewProps) {
     isDeletingNote,
     error,
     isDeleteDialogOpen,
+    generatedPlanPreview,
+    isPlanPreviewDialogOpen,
     handleGeneratePlan,
+    handleAcceptPlan,
+    handleRejectPlan,
     handleDeleteNote,
     handleOpenDeleteDialog,
     handleCloseDeleteDialog,
@@ -98,6 +103,14 @@ export function NoteDetailsView({ noteId }: NoteDetailsViewProps) {
           </div>
         </div>
       </div>
+
+      {/* Plan preview dialog */}
+      <PlanPreviewDialog
+        isOpen={isPlanPreviewDialogOpen}
+        plan={generatedPlanPreview}
+        onAccept={handleAcceptPlan}
+        onReject={handleRejectPlan}
+      />
 
       {/* Confirmation dialog */}
       <ConfirmationDialog

@@ -40,7 +40,51 @@ export class PlanGenerationService {
   constructor(private supabase: SupabaseClient) {}
 
   /**
-   * Generate a new travel plan for a note
+   * Generate a new travel plan preview (without saving to database)
+   * This is used for the preview dialog where user can accept/reject
+   *
+   * @param noteId - ID of the note to generate plan for
+   * @returns Promise resolving to the plan DTO (without saving)
+   * @throws NotFoundError if note or profile not found
+   * @throws ForbiddenError if user doesn't own the note
+   * @throws IncompleteProfileError if profile is missing required fields
+   * @throws GenerationLimitError if monthly limit exceeded
+   * @throws AIGenerationError if AI service fails
+   */
+  async generatePlanPreview(noteId: string): Promise<{ plan: { id: string; note_id: string; content: string; model: string; created_at: string; tokens_used: number } }> {
+    // Step 1: Fetch note and verify ownership
+    const note = await this.fetchNote(noteId);
+    this.verifyOwnership(note);
+
+    // Step 2: Fetch user profile and verify completeness
+    const profile = await this.fetchProfile(note.user_id);
+    this.verifyProfileCompleteness(profile);
+
+    // Step 3: Check generation limits (but don't increment)
+    await this.checkGenerationLimit(profile);
+
+    // Step 4: Build prompt from note and profile
+    const prompt = this.buildPromptFromData(note, profile);
+
+    // Step 5: Call AI service
+    const openRouter = getOpenRouterService();
+    const aiResponse = await openRouter.generatePlan(prompt);
+
+    // Step 6: Return plan data without saving to database
+    return {
+      plan: {
+        id: crypto.randomUUID(), // Temporary ID for preview
+        note_id: noteId,
+        content: aiResponse.content,
+        model: aiResponse.model || "unknown",
+        created_at: new Date().toISOString(),
+        tokens_used: aiResponse.promptTokens + aiResponse.completionTokens,
+      },
+    };
+  }
+
+  /**
+   * Generate a new travel plan for a note (legacy method - saves to database)
    *
    * @param noteId - ID of the note to generate plan for
    * @returns Promise resolving to the generated plan with quota info

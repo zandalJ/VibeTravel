@@ -263,6 +263,10 @@ export interface NoteDetailsViewModel {
   error: string | null;
   /** Determines if the delete confirmation modal is open. */
   isDeleteDialogOpen: boolean;
+  /** Generated plan preview (before acceptance). */
+  generatedPlanPreview: PlanDTO | null;
+  /** Determines if the plan preview dialog is open. */
+  isPlanPreviewDialogOpen: boolean;
 }
 
 // ============================================================================
