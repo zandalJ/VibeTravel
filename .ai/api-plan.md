@@ -48,13 +48,7 @@
 }
 ```
 
-**Response (401 Unauthorized):**
-```json
-{
-  "error": "Authentication required",
-  "code": "UNAUTHORIZED"
-}
-```
+> Authentication fallback: For the MVP, this endpoint uses a default test user when no Supabase session is present, so 401 responses are currently disabled. Full authentication enforcement will be added later.
 
 ---
 
@@ -112,13 +106,7 @@
 }
 ```
 
-**Response (401 Unauthorized):**
-```json
-{
-  "error": "Authentication required",
-  "code": "UNAUTHORIZED"
-}
-```
+> Authentication fallback: For the MVP, this endpoint uses a default test user when no Supabase session exists, so 401 responses are disabled for now.
 
 ---
 
@@ -160,13 +148,7 @@
 }
 ```
 
-**Response (401 Unauthorized):**
-```json
-{
-  "error": "Authentication required",
-  "code": "UNAUTHORIZED"
-}
-```
+> Authentication fallback: For the MVP, this endpoint uses a default test user when no Supabase session exists, so 401 responses are disabled for now.
 
 ---
 
@@ -533,7 +515,7 @@ Note: All data comes from the note and user's profile. No additional input neede
 
 - **Method:** `GET`
 - **Path:** `/api/plans/:id`
-- **Description:** Retrieve a specific plan by ID
+- **Description:** Retrieve a specific plan with nested note details
 - **Authentication:** Required (Supabase session)
 
 **Response (200 OK):**
@@ -553,11 +535,14 @@ Note: All data comes from the note and user's profile. No additional input neede
 }
 ```
 
-**Response (404 Not Found):**
+**Response (400 Bad Request):**
 ```json
 {
-  "error": "Plan not found",
-  "code": "PLAN_NOT_FOUND"
+  "error": "Validation failed",
+  "code": "VALIDATION_ERROR",
+  "details": {
+    "id": "Invalid UUID format"
+  }
 }
 ```
 
@@ -577,7 +562,15 @@ Note: All data comes from the note and user's profile. No additional input neede
 }
 ```
 
----
+**Response (404 Not Found):**
+```json
+{
+  "error": "Plan not found",
+  "code": "PLAN_NOT_FOUND"
+}
+```
+
+> Authentication fallback: For the MVP, this endpoint uses a default test user when no Supabase session exists, so 401 responses are disabled for now.
 
 #### Submit Plan Feedback
 
@@ -624,13 +617,7 @@ Note: All data comes from the note and user's profile. No additional input neede
 }
 ```
 
-**Response (401 Unauthorized):**
-```json
-{
-  "error": "Authentication required",
-  "code": "UNAUTHORIZED"
-}
-```
+> Authentication fallback: For the MVP, this endpoint uses a default test user when no Supabase session exists, so 401 responses are disabled for now.
 
 **Response (403 Forbidden):**
 ```json

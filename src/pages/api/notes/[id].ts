@@ -39,17 +39,7 @@ export const GET: APIRoute = async (context) => {
     console.log("[GET /api/notes/:id] Validated noteId:", validatedNoteId);
 
     // Step 2: Authentication check - get current user (or use default for MVP)
-    const {
-      data: { user },
-      error: authError,
-    } = await context.locals.supabase.auth.getUser();
-
-    // For MVP: Use DEFAULT_USER_ID when no auth session exists
-    const userId = user?.id || DEFAULT_USER_ID;
-
-    if (authError) {
-      console.warn("[GET /api/notes/:id] Auth error (using DEFAULT_USER_ID):", authError.message);
-    }
+    const userId = context.locals.user?.id || DEFAULT_USER_ID;
 
     console.log("[GET /api/notes/:id] Using user ID:", userId);
 
@@ -116,17 +106,7 @@ export const PUT: APIRoute = async (context) => {
     console.log("[PUT /api/notes/:id] Validated data:", validatedData);
 
     // Step 3: Authentication check - get current user (or use default for MVP)
-    const {
-      data: { user },
-      error: authError,
-    } = await context.locals.supabase.auth.getUser();
-
-    // For MVP: Use DEFAULT_USER_ID when no auth session exists
-    const userId = user?.id || DEFAULT_USER_ID;
-
-    if (authError) {
-      console.warn("[PUT /api/notes/:id] Auth error (using DEFAULT_USER_ID):", authError.message);
-    }
+    const userId = context.locals.user?.id || DEFAULT_USER_ID;
 
     console.log("[PUT /api/notes/:id] Using user ID:", userId);
 

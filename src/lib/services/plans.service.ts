@@ -80,6 +80,74 @@ export class PlansService {
   }
 
   /**
+   * Retrieves a specific plan by ID with authorization check
+   *
+   * @param planId - UUID of the plan to fetch
+   * @param userId - UUID of the authenticated user
+   * @returns Promise resolving to PlanDTO with nested note information
+   * @throws NotFoundError if plan doesn't exist
+   * @throws ForbiddenError if user doesn't own the plan's note
+   * @throws Error for database errors
+   */
+  async getPlanById(planId: string, userId: string): Promise<PlanDTO> {
+    const { data, error } = await this.supabase
+      .from("plans")
+      .select(
+        `
+      id,
+      note_id,
+      content,
+      prompt_version,
+      feedback,
+      created_at,
+      notes!inner(
+        destination,
+        start_date,
+        end_date,
+        user_id
+      )
+    `
+      )
+      .eq("id", planId)
+      .single();
+
+    if (error) {
+      if (error.code === "PGRST116") {
+        throw new NotFoundError("plan", planId);
+      }
+      // eslint-disable-next-line no-console
+      console.error("[PlansService.getPlanById] Database error:", {
+        planId,
+        userId,
+        error: error.message,
+      });
+      throw new Error(`Failed to fetch plan: ${error.message}`);
+    }
+
+    if (!data) {
+      throw new NotFoundError("plan", planId);
+    }
+
+    if (data.notes.user_id !== userId) {
+      throw new ForbiddenError("You don't have permission to access this plan");
+    }
+
+    return {
+      id: data.id,
+      note_id: data.note_id,
+      content: data.content,
+      prompt_version: data.prompt_version,
+      feedback: data.feedback,
+      created_at: data.created_at,
+      note: {
+        destination: data.notes.destination,
+        start_date: data.notes.start_date,
+        end_date: data.notes.end_date,
+      },
+    };
+  }
+
+  /**
    * Creates a new plan from accepted preview
    * This saves the plan to database and increments the generation count
    *
