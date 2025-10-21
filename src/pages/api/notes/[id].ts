@@ -4,13 +4,13 @@ import { validateNoteId, updateNoteSchema } from "../../../lib/validators/notes.
 import { createErrorResponse } from "../../../lib/utils/error-mapper";
 import type { UpdateNoteCommand } from "../../../types";
 
-export const prerender = false;
-
 /**
- * Default user ID for development purposes (matches test user in migrations)
- * TODO: Enforce authentication in production
+ * Default user ID for development/testing without authentication.
+ * TODO: Remove once Supabase auth is wired into routes.
  */
 const DEFAULT_USER_ID = "00000000-0000-0000-0000-000000000000";
+
+export const prerender = false;
 
 /**
  * GET /api/notes/:id
@@ -27,7 +27,7 @@ const DEFAULT_USER_ID = "00000000-0000-0000-0000-000000000000";
  * - 404 Not Found: Note doesn't exist
  * - 500 Internal Server Error: Database or unexpected errors
  *
- * NOTE: For MVP, falls back to DEFAULT_USER_ID when no auth session exists
+ * NOTE: Falls back to DEFAULT_USER_ID when no auth session exists (testing only)
  */
 export const GET: APIRoute = async (context) => {
   try {
@@ -38,7 +38,7 @@ export const GET: APIRoute = async (context) => {
     const validatedNoteId = validateNoteId(id);
     console.log("[GET /api/notes/:id] Validated noteId:", validatedNoteId);
 
-    // Step 2: Authentication check - get current user (or use default for MVP)
+    // Step 2: Authentication check with fallback for local testing
     const userId = context.locals.user?.id || DEFAULT_USER_ID;
 
     console.log("[GET /api/notes/:id] Using user ID:", userId);
@@ -87,7 +87,7 @@ export const GET: APIRoute = async (context) => {
  * - 404 Not Found: Note doesn't exist
  * - 500 Internal Server Error: Database or unexpected errors
  *
- * NOTE: For MVP, falls back to DEFAULT_USER_ID when no auth session exists
+ * NOTE: Falls back to DEFAULT_USER_ID when no auth session exists (testing only)
  */
 export const PUT: APIRoute = async (context) => {
   try {
@@ -105,7 +105,7 @@ export const PUT: APIRoute = async (context) => {
     const validatedData = updateNoteSchema.parse(body) as UpdateNoteCommand;
     console.log("[PUT /api/notes/:id] Validated data:", validatedData);
 
-    // Step 3: Authentication check - get current user (or use default for MVP)
+    // Step 3: Authentication check with fallback for local testing
     const userId = context.locals.user?.id || DEFAULT_USER_ID;
 
     console.log("[PUT /api/notes/:id] Using user ID:", userId);
