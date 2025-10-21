@@ -4,13 +4,13 @@ import { validateNoteId, updateNoteSchema } from "../../../lib/validators/notes.
 import { createErrorResponse } from "../../../lib/utils/error-mapper";
 import type { UpdateNoteCommand } from "../../../types";
 
+export const prerender = false;
+
 /**
  * Default user ID for development/testing without authentication.
  * TODO: Remove once Supabase auth is wired into routes.
  */
 const DEFAULT_USER_ID = "00000000-0000-0000-0000-000000000000";
-
-export const prerender = false;
 
 /**
  * GET /api/notes/:id
@@ -131,6 +131,48 @@ export const PUT: APIRoute = async (context) => {
 
     if (error instanceof Error) {
       console.error("[PUT /api/notes/:id] Error stack:", error.stack);
+    }
+
+    return createErrorResponse(error);
+  }
+};
+
+/**
+ * DELETE /api/notes/:id
+ * Deletes an existing note with authorization check
+ *
+ * URL Parameters:
+ * - id: UUID of the note to delete
+ *
+ * Response: 204 No Content
+ *
+ * Error responses:
+ * - 400 Bad Request: Invalid UUID format
+ * - 401 Unauthorized: No authenticated user
+ * - 403 Forbidden: User doesn't own the note
+ * - 404 Not Found: Note doesn't exist
+ * - 500 Internal Server Error: Database or unexpected errors
+ */
+export const DELETE: APIRoute = async (context) => {
+  try {
+    const { id } = context.params;
+
+    const validatedNoteId = validateNoteId(id);
+
+    const userId = context.locals.user?.id || DEFAULT_USER_ID;
+
+    const notesService = new NotesService(context.locals.supabase);
+
+    await notesService.deleteNote(validatedNoteId, userId);
+
+    return new Response(null, {
+      status: 204,
+    });
+  } catch (error) {
+    console.error("[DELETE /api/notes/:id] Error occurred:", error);
+
+    if (error instanceof Error) {
+      console.error("[DELETE /api/notes/:id] Error stack:", error.stack);
     }
 
     return createErrorResponse(error);

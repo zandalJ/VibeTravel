@@ -19,6 +19,7 @@ import {
   GenerationLimitError,
   AIGenerationError,
   ValidationError,
+  UnauthorizedError,
   isPlanGenerationError,
 } from "../errors/plan-generation.errors";
 import { z } from "zod";
@@ -95,6 +96,17 @@ export function mapErrorToResponse(error: unknown): {
       body: {
         error: error.message,
         code: "FORBIDDEN",
+      },
+    };
+  }
+
+  // Handle unauthorized error
+  if (error instanceof UnauthorizedError) {
+    return {
+      status: 401,
+      body: {
+        error: error.message,
+        code: "UNAUTHORIZED",
       },
     };
   }

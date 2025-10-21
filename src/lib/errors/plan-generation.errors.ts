@@ -46,6 +46,18 @@ export class ForbiddenError extends PlanGenerationError {
 }
 
 /**
+ * Thrown when an operation requires authentication but no valid user session is present
+ * HTTP Status: 401 Unauthorized
+ */
+export class UnauthorizedError extends PlanGenerationError {
+  readonly statusCode = 401;
+
+  constructor(message = "You must be authenticated to perform this action") {
+    super(message);
+  }
+}
+
+/**
  * Thrown when user profile is missing required fields for plan generation
  * HTTP Status: 400 Bad Request
  */

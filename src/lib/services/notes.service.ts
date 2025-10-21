@@ -155,4 +155,37 @@ export class NotesService {
 
     return noteDTO;
   }
+
+  /**
+   * Deletes an existing travel note after verifying ownership
+   *
+   * @param noteId - UUID of the note to delete
+   * @param userId - UUID of the authenticated user
+   * @throws NotFoundError if note doesn't exist
+   * @throws ForbiddenError if user doesn't own the note
+   * @throws Error for database errors
+   */
+  async deleteNote(noteId: string, userId: string): Promise<void> {
+    // Step 1: Ensure the note exists and belongs to the user
+    await this.getNoteById(noteId, userId);
+
+    // Step 2: Perform the delete operation scoped to user ownership
+    const { error, count } = await this.supabase
+      .from("notes")
+      .delete({ count: "exact" })
+      .eq("id", noteId)
+      .eq("user_id", userId);
+
+    // Step 3: Handle database errors
+    if (error) {
+      // eslint-disable-next-line no-console
+      console.error("[NotesService.deleteNote] Database error:", error);
+      throw new Error(`Failed to delete note: ${error.message}`);
+    }
+
+    // Step 4: Handle race condition where note might have been deleted concurrently
+    if (!count) {
+      throw new NotFoundError("note", noteId);
+    }
+  }
 }
