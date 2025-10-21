@@ -1,5 +1,11 @@
 import type { SupabaseClient } from "../../db/supabase.client";
-import type { CreateNoteCommand, UpdateNoteCommand, NoteDTO } from "../../types";
+import type {
+  CreateNoteCommand,
+  UpdateNoteCommand,
+  NoteDTO,
+  NotesListResponseDTO,
+  SortParams,
+} from "../../types";
 import { NotFoundError, ForbiddenError } from "../errors/plan-generation.errors";
 
 /**
@@ -187,5 +193,60 @@ export class NotesService {
     if (!count) {
       throw new NotFoundError("note", noteId);
     }
+  }
+
+  async getNotesListForUser({
+    userId,
+    limit,
+    offset,
+    sort,
+  }: {
+    userId: string;
+    limit: number;
+    offset: number;
+    sort: SortParams;
+  }): Promise<NotesListResponseDTO> {
+    const { data: notesData, error: notesError } = await this.supabase
+      .from("notes")
+      .select("id,destination,start_date,end_date,total_budget,additional_notes,created_at,updated_at,plans(count)")
+      .eq("user_id", userId)
+      .order(sort.field, { ascending: sort.direction === "asc" })
+      .range(offset, offset + limit - 1);
+
+    if (notesError) {
+      console.error("[NotesService.getNotesListForUser] Database error (notes query):", notesError);
+      throw new Error(`Failed to fetch notes: ${notesError.message}`);
+    }
+
+    const { count: totalCount, error: countError } = await this.supabase
+      .from("notes")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", userId);
+
+    if (countError) {
+      console.error("[NotesService.getNotesListForUser] Database error (count query):", countError);
+      throw new Error(`Failed to fetch notes count: ${countError.message}`);
+    }
+
+    const notes = (notesData ?? []).map((note) => ({
+      id: note.id,
+      destination: note.destination,
+      start_date: note.start_date,
+      end_date: note.end_date,
+      total_budget: note.total_budget,
+      additional_notes: note.additional_notes,
+      created_at: note.created_at,
+      updated_at: note.updated_at,
+      plan_count: Array.isArray(note.plans) && note.plans.length > 0 ? note.plans[0]?.count ?? 0 : 0,
+    }));
+
+    return {
+      notes,
+      pagination: {
+        total: totalCount ?? 0,
+        limit,
+        offset,
+      },
+    };
   }
 }

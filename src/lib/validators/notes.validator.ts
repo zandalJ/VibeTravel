@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import type { SortParams } from "../../types";
+
 /**
  * Validation schema for creating a new travel note
  *
@@ -84,4 +86,65 @@ export function validateNoteId(noteId: string | undefined): string {
   }
 
   return noteIdSchema.parse(noteId);
+}
+
+const sortFieldEnum = z.enum(["created_at", "start_date", "destination"]);
+const sortDirectionEnum = z.enum(["asc", "desc"]);
+
+const sortParamSchema = z
+  .string()
+  .trim()
+  .transform((value) => value.toLowerCase())
+  .refine((value) => value.includes(":"), {
+    message: "Sort must use the format field:direction",
+  })
+  .transform((value) => {
+    const [field = "", direction = ""] = value.split(":");
+    return { field: field.trim(), direction: direction.trim() };
+  })
+  .refine(({ field }) => sortFieldEnum.safeParse(field).success, {
+    message: "Sort field must be one of created_at, start_date, destination",
+    path: ["field"],
+  })
+  .refine(({ direction }) => sortDirectionEnum.safeParse(direction).success, {
+    message: "Sort direction must be asc or desc",
+    path: ["direction"],
+  })
+  .transform(({ field, direction }) => ({
+    field: field as SortParams["field"],
+    direction: direction as SortParams["direction"],
+  }));
+
+/**
+ * Schema for validating notes list query parameters (GET /api/notes)
+ */
+const rawNotesListQuerySchema = z.object({
+  sort: sortParamSchema.optional(),
+  limit: z
+    .coerce.number({ invalid_type_error: "Limit must be a number" })
+    .int("Limit must be an integer")
+    .min(1, "Limit must be at least 1")
+    .max(100, "Limit cannot exceed 100")
+    .optional(),
+  offset: z
+    .coerce.number({ invalid_type_error: "Offset must be a number" })
+    .int("Offset must be an integer")
+    .min(0, "Offset must be greater or equal to 0")
+    .optional(),
+});
+
+export const notesListQuerySchema = rawNotesListQuerySchema.transform((value) => ({
+  sort: value.sort ?? { field: "created_at", direction: "desc" },
+  limit: value.limit ?? 50,
+  offset: value.offset ?? 0,
+}));
+
+export type NotesListQueryFilters = z.infer<typeof notesListQuerySchema>;
+
+export function parseNotesListQueryParams(searchParams: URLSearchParams): NotesListQueryFilters {
+  return notesListQuerySchema.parse({
+    sort: searchParams.get("sort") ?? undefined,
+    limit: searchParams.get("limit") ?? undefined,
+    offset: searchParams.get("offset") ?? undefined,
+  });
 }
