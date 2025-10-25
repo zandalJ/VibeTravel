@@ -269,6 +269,22 @@ export interface NoteDetailsViewModel {
   isPlanPreviewDialogOpen: boolean;
 }
 
+/**
+ * Aggregates list data and UI states for the dashboard view displaying notes.
+ */
+export interface NotesListViewModel {
+  notes: NoteListItemDTO[];
+  pagination: {
+    total: number;
+    limit: number;
+    offset: number;
+  };
+  sort: SortParams;
+  isLoading: boolean;
+  isRefetching: boolean;
+  error: string | null;
+}
+
 // ============================================================================
 // HELPER TYPES
 // ============================================================================

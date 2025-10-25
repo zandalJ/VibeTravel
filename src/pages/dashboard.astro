@@ -1,0 +1,11 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import { NotesDashboardView } from "@/components/notes/NotesDashboardView";
+---
+
+<Layout title="Panel główny - VibeTravel">
+  <main class="min-h-screen bg-background text-foreground">
+    <NotesDashboardView client:load />
+  </main>
+</Layout>
+
