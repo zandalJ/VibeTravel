@@ -70,11 +70,8 @@ export function mapErrorToResponse(error: unknown): {
 
   // Handle not found error
   if (error instanceof NotFoundError) {
-    const errorCode = error.resourceType === "plan"
-      ? "PLAN_NOT_FOUND"
-      : error.resourceType === "note"
-      ? "NOTE_NOT_FOUND"
-      : "NOT_FOUND";
+    const errorCode =
+      error.resourceType === "plan" ? "PLAN_NOT_FOUND" : error.resourceType === "note" ? "NOTE_NOT_FOUND" : "NOT_FOUND";
 
     return {
       status: 404,

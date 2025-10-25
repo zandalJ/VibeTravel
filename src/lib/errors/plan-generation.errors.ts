@@ -19,14 +19,14 @@ export abstract class PlanGenerationError extends Error {
 }
 
 /**
- * Thrown when a requested resource (note, user, profile) is not found
+ * Thrown when a requested resource (note, plan, user, profile) is not found
  * HTTP Status: 404 Not Found
  */
 export class NotFoundError extends PlanGenerationError {
   readonly statusCode = 404;
 
   constructor(
-    public readonly resourceType: "note" | "user" | "profile",
+    public readonly resourceType: "note" | "plan" | "user" | "profile",
     public readonly resourceId: string
   ) {
     super(`${resourceType.charAt(0).toUpperCase() + resourceType.slice(1)} with ID ${resourceId} not found`);

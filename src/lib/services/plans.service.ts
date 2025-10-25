@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "../../db/supabase.client";
-import type { PlansListResponseDTO, PlanListItemDTO, PlanDTO } from "../../types";
+import type { FeedbackResponseDTO, PlansListResponseDTO, PlanListItemDTO, PlanDTO } from "../../types";
 import type { TablesInsert } from "../../db/database.types";
 import { NotFoundError, ForbiddenError } from "../errors/plan-generation.errors";
 import { getPromptVersion } from "../utils/prompt-builder";
@@ -215,6 +215,59 @@ export class PlansService {
       tokens_used: plan.tokens_used,
       created_at: plan.created_at,
       updated_at: plan.updated_at,
+    };
+  }
+
+  async submitFeedback(planId: string, userId: string, feedback: 1 | -1): Promise<FeedbackResponseDTO> {
+    const { data, error } = await this.supabase
+      .from("plans")
+      .select(
+        `
+      id,
+      feedback,
+      notes!inner(
+        user_id
+      )
+    `
+      )
+      .eq("id", planId)
+      .single();
+
+    if (error) {
+      if (error.code === "PGRST116") {
+        throw new NotFoundError("plan", planId);
+      }
+      console.error("[PlansService.submitFeedback] Failed to load plan", { planId, userId, error: error.message });
+      throw new Error(`Failed to load plan: ${error.message}`);
+    }
+
+    if (!data) {
+      throw new NotFoundError("plan", planId);
+    }
+
+    if (data.notes.user_id !== userId) {
+      throw new ForbiddenError("You don't have permission to submit feedback for this plan");
+    }
+
+    const { error: updateError } = await this.supabase
+      .from("plans")
+      .update({ feedback })
+      .eq("id", planId);
+
+    if (updateError) {
+      console.error("[PlansService.submitFeedback] Failed to update feedback", {
+        planId,
+        userId,
+        feedback,
+        error: updateError.message,
+      });
+      throw new Error(`Failed to update plan feedback: ${updateError.message}`);
+    }
+
+    return {
+      id: planId,
+      feedback,
+      message: "Feedback recorded successfully",
     };
   }
 
