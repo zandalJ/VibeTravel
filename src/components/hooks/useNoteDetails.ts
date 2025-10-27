@@ -208,8 +208,8 @@ export function useNoteDetails({
 
       toast.success("Notatka została usunięta");
 
-      // Redirect to notes list
-      window.location.href = "/notes";
+      // Redirect to dashboard after deletion
+      window.location.href = "/dashboard";
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "Wystąpił nieoczekiwany błąd";

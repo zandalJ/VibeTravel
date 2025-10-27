@@ -58,7 +58,7 @@ export function NoteDetailsView({ noteId }: NoteDetailsViewProps) {
           <div className="flex items-center justify-between">
             <h1 className="text-3xl font-bold">Szczegóły notatki</h1>
             <a
-              href="/notes"
+              href="/dashboard"
               className="text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
               ← Powrót do listy notatek
