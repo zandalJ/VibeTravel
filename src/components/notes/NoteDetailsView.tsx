@@ -40,9 +40,7 @@ export function NoteDetailsView({ noteId }: NoteDetailsViewProps) {
       <div className="container mx-auto py-8 px-4">
         <div className="max-w-4xl mx-auto">
           <div className="p-4 bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-lg">
-            <h2 className="text-lg font-semibold text-red-800 dark:text-red-200 mb-2">
-              Wystąpił błąd
-            </h2>
+            <h2 className="text-lg font-semibold text-red-800 dark:text-red-200 mb-2">Wystąpił błąd</h2>
             <p className="text-red-700 dark:text-red-300">{error}</p>
           </div>
         </div>
@@ -57,10 +55,7 @@ export function NoteDetailsView({ noteId }: NoteDetailsViewProps) {
           {/* Header */}
           <div className="flex items-center justify-between">
             <h1 className="text-3xl font-bold">Szczegóły notatki</h1>
-            <a
-              href="/dashboard"
-              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-            >
+            <a href="/dashboard" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
               ← Powrót do listy notatek
             </a>
           </div>

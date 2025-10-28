@@ -270,6 +270,39 @@ export interface NoteDetailsViewModel {
 }
 
 /**
+ * Aggregates data and UI states for the generated plan details view.
+ */
+export interface GeneratedPlanViewModel {
+  /** Currently loaded plan. */
+  plan: PlanDTO | null;
+  /** Indicates whether the plan is being fetched. */
+  isLoading: boolean;
+  /** Optional error message related to loading or actions. */
+  error: string | null;
+  /** Indicates whether feedback submission is in progress. */
+  isSubmittingFeedback: boolean;
+  /** Currently selected feedback value. */
+  currentFeedback: 1 | -1 | null;
+}
+
+/**
+ * Parameters required to initialize the generated plan hook.
+ */
+export interface UseGeneratedPlanParams {
+  planId: string;
+}
+
+/**
+ * Return type of the generated plan hook, exposing state and actions.
+ */
+export interface UseGeneratedPlanReturn {
+  viewModel: GeneratedPlanViewModel;
+  retry: () => Promise<void>;
+  submitFeedback: (value: 1 | -1) => Promise<void>;
+  copy: (content: string) => Promise<void>;
+}
+
+/**
  * Aggregates list data and UI states for the dashboard view displaying notes.
  */
 export interface NotesListViewModel {

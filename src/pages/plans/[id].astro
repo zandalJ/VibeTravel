@@ -1,0 +1,17 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import { GeneratedPlanView } from "../../components/notes/GeneratedPlanView";
+
+const { id } = Astro.params;
+
+if (!id) {
+  return Astro.redirect("/notes");
+}
+
+const pageTitle = "Szczegóły planu podróży - VibeTravel";
+---
+
+<Layout title={pageTitle}>
+  <GeneratedPlanView planId={id} client:load />
+</Layout>
+
