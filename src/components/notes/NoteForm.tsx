@@ -1,15 +1,8 @@
 import { useNoteForm } from "@/components/hooks/useNoteForm";
+import { useCallback, useState } from "react";
 import { DatePicker } from "./DatePicker";
 import { Button } from "@/components/ui/button";
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import type { NoteDTO } from "@/types";
@@ -24,18 +17,52 @@ interface NoteFormProps {
  * Uses react-hook-form with Zod validation
  * Calls POST /api/notes endpoint
  */
-export function NoteForm({
-  onSuccess,
-  onCancel,
-}: NoteFormProps) {
+export function NoteForm({ onSuccess, onCancel }: NoteFormProps) {
+  const [createdNote, setCreatedNote] = useState<NoteDTO | null>(null);
+
+  const handleSuccess = useCallback(
+    (note: NoteDTO) => {
+      setCreatedNote(note);
+
+      if (onSuccess) {
+        onSuccess(note);
+      }
+    },
+    [onSuccess]
+  );
+
   const { form, onSubmit, isSubmitting, error } = useNoteForm({
-    onSuccess,
+    onSuccess: handleSuccess,
   });
 
   return (
     <div className="w-full max-w-2xl mx-auto">
+      {createdNote && (
+        <div className="mb-6 rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-emerald-800">
+          <div className="space-y-3">
+            <div>
+              <p className="text-base font-semibold">Travel note created successfully!</p>
+              <p className="text-sm text-emerald-700">What would you like to do next?</p>
+            </div>
+            <div className="flex flex-wrap gap-3">
+              <Button asChild variant="outline">
+                <a href="/dashboard">Return to dashboard</a>
+              </Button>
+              <Button asChild>
+                <a href={`/notes/${createdNote.id}`}>Open created note</a>
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <form
+          onSubmit={form.handleSubmit(async (values) => {
+            setCreatedNote(null);
+            await onSubmit(values);
+          })}
+          className="space-y-6"
+        >
           {/* Destination Field */}
           <FormField
             control={form.control}
@@ -44,15 +71,9 @@ export function NoteForm({
               <FormItem>
                 <FormLabel>Destination</FormLabel>
                 <FormControl>
-                  <Input
-                    placeholder="e.g., Paris, France"
-                    {...field}
-                    disabled={isSubmitting}
-                  />
+                  <Input placeholder="e.g., Paris, France" {...field} disabled={isSubmitting} />
                 </FormControl>
-                <FormDescription>
-                  Where do you want to travel?
-                </FormDescription>
+                <FormDescription>Where do you want to travel?</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -71,17 +92,13 @@ export function NoteForm({
                     <DatePicker
                       value={field.value ? new Date(field.value) : undefined}
                       onChange={(date) => {
-                        field.onChange(
-                          date ? date.toISOString().split("T")[0] : ""
-                        );
+                        field.onChange(date ? date.toISOString().split("T")[0] : "");
                       }}
                       placeholder="Select start date"
                       disabled={isSubmitting}
                     />
                   </FormControl>
-                  <FormDescription>
-                    When does your trip start?
-                  </FormDescription>
+                  <FormDescription>When does your trip start?</FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -98,17 +115,13 @@ export function NoteForm({
                     <DatePicker
                       value={field.value ? new Date(field.value) : undefined}
                       onChange={(date) => {
-                        field.onChange(
-                          date ? date.toISOString().split("T")[0] : ""
-                        );
+                        field.onChange(date ? date.toISOString().split("T")[0] : "");
                       }}
                       placeholder="Select end date"
                       disabled={isSubmitting}
                     />
                   </FormControl>
-                  <FormDescription>
-                    When does your trip end?
-                  </FormDescription>
+                  <FormDescription>When does your trip end?</FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -135,9 +148,7 @@ export function NoteForm({
                     disabled={isSubmitting}
                   />
                 </FormControl>
-                <FormDescription>
-                  What's your total budget for this trip?
-                </FormDescription>
+                <FormDescription>What's your total budget for this trip?</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -177,12 +188,7 @@ export function NoteForm({
           {/* Action Buttons */}
           <div className="flex gap-3 justify-end">
             {onCancel && (
-              <Button
-                type="button"
-                variant="outline"
-                onClick={onCancel}
-                disabled={isSubmitting}
-              >
+              <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
                 Cancel
               </Button>
             )}

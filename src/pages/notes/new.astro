@@ -9,17 +9,9 @@ export const prerender = false;
   <main class="container mx-auto px-4 py-8">
     <div class="mb-8 text-center">
       <h1 class="text-3xl font-bold mb-2">Create New Travel Note</h1>
-      <p class="text-muted-foreground">
-        Add details about your upcoming trip to generate personalized travel plans.
-      </p>
+      <p class="text-muted-foreground">Add details about your upcoming trip to generate personalized travel plans.</p>
     </div>
 
-    <NoteForm
-      client:load
-      onSuccess={() => {
-        // Redirect to home page after successful creation
-        window.location.href = "/";
-      }}
-    />
+    <NoteForm client:load />
   </main>
 </Layout>

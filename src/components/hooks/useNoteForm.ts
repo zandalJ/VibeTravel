@@ -1,10 +1,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
-import {
-  createNoteSchema,
-  type NoteFormViewModel,
-} from "@/lib/validators/notes.validator";
+import { createNoteSchema, type NoteFormViewModel } from "@/lib/validators/notes.validator";
 import type { NoteDTO } from "@/types";
 
 interface UseNoteFormProps {
@@ -23,10 +20,7 @@ interface UseNoteFormReturn {
  * Custom hook for managing note creation form state and submission
  * Calls POST /api/notes to create a new note
  */
-export function useNoteForm({
-  onSuccess,
-  onError,
-}: UseNoteFormProps): UseNoteFormReturn {
+export function useNoteForm({ onSuccess, onError }: UseNoteFormProps): UseNoteFormReturn {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -60,6 +54,8 @@ export function useNoteForm({
       }
 
       const savedNote: NoteDTO = await response.json();
+
+      form.reset();
 
       if (onSuccess) {
         onSuccess(savedNote);
