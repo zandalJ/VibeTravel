@@ -18,8 +18,9 @@ import {
   IncompleteProfileError,
   GenerationLimitError,
   AIGenerationError,
+  UnauthorizedError,
 } from "../errors/plan-generation.errors";
-import { getOpenRouterService } from "./openrouter.service";
+import { getOpenRouterService, OpenRouterError } from "./openrouter.service";
 import { buildPrompt, getPromptVersion, validatePromptData } from "../utils/prompt-builder";
 
 /**
@@ -51,7 +52,9 @@ export class PlanGenerationService {
    * @throws GenerationLimitError if monthly limit exceeded
    * @throws AIGenerationError if AI service fails
    */
-  async generatePlanPreview(noteId: string): Promise<{ plan: { id: string; note_id: string; content: string; model: string; created_at: string; tokens_used: number } }> {
+  async generatePlanPreview(noteId: string): Promise<{
+    plan: { id: string; note_id: string; content: string; model: string; created_at: string; tokens_used: number };
+  }> {
     // Step 1: Fetch note and verify ownership
     const note = await this.fetchNote(noteId);
     this.verifyOwnership(note);
@@ -68,7 +71,16 @@ export class PlanGenerationService {
 
     // Step 5: Call AI service
     const openRouter = getOpenRouterService();
-    const aiResponse = await openRouter.generatePlan(prompt);
+    let aiResponse;
+    try {
+      aiResponse = await openRouter.generatePlan(prompt);
+    } catch (error) {
+      this.handleAIServiceError(error);
+    }
+
+    if (!aiResponse) {
+      throw new AIGenerationError("Failed to generate travel plan preview.");
+    }
 
     // Step 6: Return plan data without saving to database
     return {
@@ -117,7 +129,16 @@ export class PlanGenerationService {
 
       // Step 7: Call AI service
       const openRouter = getOpenRouterService();
-      const aiResponse = await openRouter.generatePlan(prompt);
+      let aiResponse;
+      try {
+        aiResponse = await openRouter.generatePlan(prompt);
+      } catch (error) {
+        this.handleAIServiceError(error);
+      }
+
+      if (!aiResponse) {
+        throw new AIGenerationError("Failed to generate travel plan.");
+      }
 
       // Step 8: Create plan record
       const plan = await this.createPlan(noteId, aiResponse.content, prompt);
@@ -155,7 +176,6 @@ export class PlanGenerationService {
         error_message: error instanceof Error ? error.message : "Unknown error occurred",
       });
 
-      // Re-throw as AIGenerationError if not already a known error
       if (
         error instanceof NotFoundError ||
         error instanceof ForbiddenError ||
@@ -165,7 +185,7 @@ export class PlanGenerationService {
         throw error;
       }
 
-      throw new AIGenerationError("Failed to generate travel plan. Please try again.", error);
+      this.handleAIServiceError(error);
     }
   }
 
@@ -382,5 +402,29 @@ export class PlanGenerationService {
         generation_count: profile.generation_count + 1,
       })
       .eq("id", userId);
+  }
+
+  private handleAIServiceError(error: unknown): never {
+    if (
+      error instanceof NotFoundError ||
+      error instanceof ForbiddenError ||
+      error instanceof IncompleteProfileError ||
+      error instanceof GenerationLimitError ||
+      error instanceof UnauthorizedError
+    ) {
+      throw error;
+    }
+
+    if (error instanceof OpenRouterError) {
+      if (error.statusCode === 401) {
+        throw new UnauthorizedError(
+          "AI service credentials are missing or invalid. Please configure OPENROUTER_API_KEY."
+        );
+      }
+
+      throw new AIGenerationError(error.message || "AI provider returned an error.", error);
+    }
+
+    throw new AIGenerationError("Failed to generate travel plan. Please try again.", error);
   }
 }
