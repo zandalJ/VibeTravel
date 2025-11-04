@@ -1,0 +1,13 @@
+---
+import AuthLayout from "@/layouts/AuthLayout.astro";
+import { RegisterForm } from "@/components/auth/RegisterForm";
+---
+
+<AuthLayout
+  title="VibeTravel | Rejestracja"
+  heading="Załóż konto VibeTravel"
+  description="Zapisuj inspiracje, notatki i plany podróży w jednym miejscu."
+>
+  <RegisterForm client:load />
+</AuthLayout>
+

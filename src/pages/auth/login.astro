@@ -1,0 +1,9 @@
+---
+import AuthLayout from "@/layouts/AuthLayout.astro";
+import { LoginForm } from "@/components/auth/LoginForm";
+---
+
+<AuthLayout title="VibeTravel | Logowanie" heading="Cześć!" description="Zaloguj się, aby kontynuować planowanie podróży i korzystać z zapisanych notatek.">
+  <LoginForm client:load />
+</AuthLayout>
+

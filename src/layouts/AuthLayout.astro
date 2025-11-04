@@ -1,0 +1,63 @@
+---
+import Layout from "./Layout.astro";
+
+interface Props {
+  title?: string;
+  heading?: string;
+  description?: string;
+}
+
+const {
+  title = "VibeTravel | Autoryzacja",
+  heading = "Witaj ponownie w VibeTravel",
+  description = "Zaplanuj kolejne przygody i miej wszystkie notatki w jednym miejscu.",
+} = Astro.props as Props;
+---
+
+<Layout title={title}>
+  <div class="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 text-slate-100">
+    <header class="flex items-center justify-between px-6 py-5">
+      <a href="/" class="flex items-center gap-2 text-lg font-semibold tracking-tight text-slate-100">
+        <span class="inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/10 font-mono text-base">VT</span>
+        VibeTravel
+      </a>
+      <a href="/" class="text-sm text-slate-200 transition hover:text-white">Wróć na stronę główną</a>
+    </header>
+
+    <main class="flex flex-1 flex-col">
+      <div class="relative flex flex-1 flex-col justify-center overflow-hidden px-4 py-12 sm:px-8 lg:px-12">
+        <div class="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top,_rgba(125,211,252,0.22),_transparent_55%)]" />
+        <div class="mx-auto grid w-full max-w-6xl gap-10 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] lg:items-center">
+          <section class="space-y-6 text-center lg:text-left">
+            <p class="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1 text-xs font-medium uppercase tracking-[0.2em] text-slate-200/80">
+              Bezpieczne logowanie
+            </p>
+            <div class="space-y-4">
+              <h1 class="text-3xl font-bold leading-tight sm:text-4xl lg:text-5xl">{heading}</h1>
+              <p class="text-base text-slate-200/80 sm:text-lg">{description}</p>
+            </div>
+            <ul class="grid gap-4 text-slate-200/80 sm:grid-cols-2">
+              <li class="rounded-xl border border-white/5 bg-white/10 px-5 py-4 text-center shadow-sm backdrop-blur-sm sm:text-left">
+                <p class="text-lg font-semibold text-white">Synchronizacja planów</p>
+                <p class="mt-1 text-sm leading-relaxed">Zapisuj notatki i generowane trasy w chmurze.</p>
+              </li>
+              <li class="rounded-xl border border-white/5 bg-white/10 px-5 py-4 text-center shadow-sm backdrop-blur-sm sm:text-left">
+                <p class="text-lg font-semibold text-white">Bezpieczne konto</p>
+                <p class="mt-1 text-sm leading-relaxed">Twoje dane chronimy zgodnie z najlepszymi praktykami.</p>
+              </li>
+            </ul>
+          </section>
+
+          <section class="mx-auto w-full max-w-md rounded-2xl border border-white/10 bg-white/90 p-6 text-slate-900 shadow-2xl backdrop-blur-sm dark:bg-slate-900/80 dark:text-slate-50">
+            <slot />
+          </section>
+        </div>
+      </div>
+    </main>
+
+    <footer class="px-6 pb-6 text-center text-xs text-slate-400">
+      © {new Date().getFullYear()} VibeTravel. Wszystkie prawa zastrzeżone.
+    </footer>
+  </div>
+</Layout>
+
