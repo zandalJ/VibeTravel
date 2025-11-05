@@ -1,6 +1,5 @@
-"use client";
-
-import { useState } from "react";
+import { useCallback, useMemo, useState } from "react";
+import type { Session } from "@supabase/supabase-js";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
@@ -15,6 +14,7 @@ import {
   type AuthFeedbackState,
   type LoginFormValues,
 } from "@/lib/validators/auth.validator";
+import { getSupabaseBrowserClient } from "@/db/supabase.client";
 
 export interface LoginFormProps {
   heading?: string;
@@ -31,6 +31,8 @@ export function LoginForm({ heading, description, defaultValues, onSubmit, class
   const [feedback, setFeedback] = useState<AuthFeedbackState>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const supabase = useMemo(() => getSupabaseBrowserClient(), []);
+
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -38,6 +40,24 @@ export function LoginForm({ heading, description, defaultValues, onSubmit, class
       password: "",
     },
   });
+
+  const syncSession = useCallback(async (session: Session) => {
+    const response = await fetch("/api/auth/session", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        event: "SIGNED_IN",
+        session,
+      }),
+      credentials: "same-origin",
+    });
+
+    if (!response.ok) {
+      throw new Error("Nie udało się zsynchronizować sesji. Spróbuj ponownie.");
+    }
+  }, []);
 
   const handleSubmit = form.handleSubmit(async (values) => {
     setFeedback(null);
@@ -49,14 +69,27 @@ export function LoginForm({ heading, description, defaultValues, onSubmit, class
         return;
       }
 
-      await new Promise((resolve) => {
-        setTimeout(resolve, 300);
-      });
+      const { data, error } = await supabase.auth.signInWithPassword(values);
 
-      setFeedback({
-        status: "success",
-        message: "Formularz wysłany. Integracja z Supabase zostanie dodana w kolejnej iteracji.",
-      });
+      if (error) {
+        setFeedback({
+          status: "error",
+          message: "Nieprawidłowy email lub hasło. Spróbuj ponownie.",
+        });
+        return;
+      }
+
+      if (!data.session) {
+        setFeedback({
+          status: "error",
+          message: "Nie udało się uwierzytelnić użytkownika. Spróbuj ponownie.",
+        });
+        return;
+      }
+
+      await syncSession(data.session);
+
+      window.location.assign("/dashboard");
     } catch (error) {
       const message = error instanceof Error ? error.message : "Coś poszło nie tak. Spróbuj ponownie.";
       setFeedback({ status: "error", message });
@@ -126,7 +159,7 @@ export function LoginForm({ heading, description, defaultValues, onSubmit, class
 
       <CardFooter className="flex justify-center">
         <p className="text-sm text-muted-foreground">
-          Nie masz jeszcze konta?{' '}
+          Nie masz jeszcze konta? {" "}
           <Button asChild variant="link" size="sm" className="px-0">
             <a href="/auth/register">Załóż konto</a>
           </Button>

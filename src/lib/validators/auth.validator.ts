@@ -85,3 +85,25 @@ export type AuthFeedbackState = {
   message: string;
 } | null;
 
+export const authEventSchema = z.enum(["SIGNED_IN", "SIGNED_OUT", "TOKEN_REFRESHED", "PASSWORD_RECOVERY"], {
+  invalid_type_error: "Invalid authentication event.",
+});
+
+export const authSessionPayloadSchema = z
+  .object({
+    access_token: z.string().min(1, "Access token is required"),
+    refresh_token: z.string().min(1, "Refresh token is required"),
+    expires_at: z.number().int().nonnegative().optional(),
+    token_type: z.string().optional(),
+    user: z
+      .object({
+        id: z.string().min(1, "User id is required"),
+        email: z.string().email().nullable().optional(),
+      })
+      .optional(),
+  })
+  .passthrough();
+
+export type AuthEvent = z.infer<typeof authEventSchema>;
+export type AuthSessionPayload = z.infer<typeof authSessionPayloadSchema>;
+

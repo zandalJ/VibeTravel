@@ -1,10 +1,47 @@
-import { createClient } from "@supabase/supabase-js";
+import {
+  createClient,
+  type SupabaseClient as SupabaseJsClient,
+  type SupabaseClientOptions,
+} from "@supabase/supabase-js";
 
 import type { Database } from "./database.types";
 
-const supabaseUrl = import.meta.env.SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.SUPABASE_KEY;
+let browserClient: SupabaseJsClient<Database> | null = null;
 
-export const supabaseClient = createClient<Database>(supabaseUrl, supabaseAnonKey);
+const DEFAULT_OPTIONS: SupabaseClientOptions = {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+  },
+};
 
-export type SupabaseClient = typeof supabaseClient;
+function ensureEnv(name: "SUPABASE_URL" | "SUPABASE_KEY") {
+  const value = import.meta.env[name];
+
+  if (!value) {
+    throw new Error(
+      `Missing environment variable ${name}. Please define it in your .env file to enable Supabase authentication.`,
+    );
+  }
+
+  return value;
+}
+
+export type SupabaseClient = SupabaseJsClient<Database>;
+
+export const getSupabaseBrowserClient = () => {
+  if (browserClient) {
+    return browserClient;
+  }
+
+  if (typeof window === "undefined") {
+    throw new Error("Supabase browser client can only be instantiated in the browser context.");
+  }
+
+  const supabaseUrl = ensureEnv("SUPABASE_URL");
+  const supabaseAnonKey = ensureEnv("SUPABASE_KEY");
+
+  browserClient = createClient<Database>(supabaseUrl, supabaseAnonKey, DEFAULT_OPTIONS);
+
+  return browserClient;
+};

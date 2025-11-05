@@ -1,5 +1,7 @@
 import type { Tables, Enums } from "./db/database.types";
 
+export type { AuthEvent, AuthSessionPayload } from "./lib/validators/auth.validator";
+
 // ============================================================================
 // BASE TYPES FROM DATABASE
 // ============================================================================

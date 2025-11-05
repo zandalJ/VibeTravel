@@ -1,6 +1,8 @@
 ---
 import "../styles/global.css";
 
+import { SessionSync } from "@/components/auth/SessionSync";
+
 interface Props {
   title?: string;
 }
@@ -19,6 +21,7 @@ const { title = "10x Astro Starter" } = Astro.props;
   </head>
   <body>
     <slot />
+    <SessionSync client:load />
   </body>
 </html>
 

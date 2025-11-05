@@ -1,6 +1,14 @@
 ---
 import AuthLayout from "@/layouts/AuthLayout.astro";
 import { LoginForm } from "@/components/auth/LoginForm";
+
+export const prerender = false;
+
+const { user } = Astro.locals;
+
+if (user) {
+  return Astro.redirect("/dashboard");
+}
 ---
 
 <AuthLayout title="VibeTravel | Logowanie" heading="Cześć!" description="Zaloguj się, aby kontynuować planowanie podróży i korzystać z zapisanych notatek.">
